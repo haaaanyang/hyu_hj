@@ -1,0 +1,83 @@
+---
+title: "rrrr"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(httr)
+library(rvest)
+library(stringr)
+
+
+url = 'https://www.dhlottery.co.kr/gameResult.do?method=byWin'
+
+
+all_winning_numbers <- list()
+
+
+for (i in 1115:1124) {
+  
+  data_lotto <- POST(
+    url, 
+    body = list(
+      drwNo = as.character(i),
+      dwrNoList = as.character(i)
+    )
+  )
+  
+  
+  data_lotto_html <- data_lotto %>% read_html()
+  
+  
+  winning_numbers <- data_lotto_html %>%
+    html_nodes('.num.win') %>%
+    html_text() %>%
+    str_extract_all('\\d+') %>%
+    unlist()
+  
+  
+  all_winning_numbers[[as.character(i)]] <- winning_numbers
+}
+
+library(ggplot2)
+
+
+winning_numbers <- list(all_winning_numbers)
+  
+
+
+all_numbers <- unlist(winning_numbers)
+
+
+number_counts <- table(all_numbers)
+
+
+df <- as.data.frame(number_counts)
+colnames(df) <- c("Number", "Count")
+df$Number <- as.numeric(as.character(df$Number))
+df <- df[order(df$Number), ]
+
+
+ggplot(data=df, aes(x=factor(Number), y=Count)) +
+  geom_bar(stat="identity") +
+  labs(title="번호별 당첨 횟수", x="번호", y="횟수") +
+  theme_minimal()
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
